@@ -5,12 +5,24 @@
 实现了微软New Bing的大多数功能，还添加了一些自己的特色功能。
 开源免费。
 
-![](./docs/img/1.png)
+## 主要功能展示
+### 聊天功能
+聊天实现了NewBing的大多数功能，搜索，画图，天气，地图等等。
+![1](https://github.com/jianjianai/NewBingGoGo-Web/assets/59829816/f951030f-7941-4ec7-887c-355d003a67be)
+
+### 创作功能
+创作实现了NewBing侧边栏的撰写的大多数功能，可更具需求生成文章。
+![1 2](https://github.com/jianjianai/NewBingGoGo-Web/assets/59829816/c6469529-0571-4a5d-8161-1a9707f52592)
+
+### 小窗功能 (插件专属)
+小窗实现了NewBing侧边栏的根据当前页面信息问答的功能，可以在同一个页面中同时打开多个小窗同时问答，高效地查阅资料和完成文章编辑工作。
+![1 1](https://github.com/jianjianai/NewBingGoGo-Web/assets/59829816/09d6cf75-f870-4c04-8809-70a3d7bc9817)
+
 
 演示站点：
 - repl java https://newbinggogo-web--jianjianai.repl.co (没配置账号)
 - java https://chat.jja8.cn/ (加了一个我小号，轻掠)
-- cloudflareWorker.js https://bingweb.jja8.cn/  (cloudflare已经废了，但是作为插件的魔法链接还是很不错的)
+- cloudflareWorker.js https://bingweb.jja8.cn/  (没配置账号)
 
 ## 功能介绍
 此服务可直接通过网页访问也可以作为NewBingGoGo插件的魔法链接服务使用。
@@ -51,6 +63,10 @@ NewBingGoGo-web既可以是一个网页服务，也可以是NewBingGoGo的魔法
 搭建NewBingGoGo-web服务后，如果想直接打开网页使用则需要配置共享账号。如果仅仅作为NewBingGoGo的魔法链接使用则不需要配置共享账号。
 
 
+## 关于
+交流群：601156371
+
+
 ## 更加强大的NewBingGoGo插件
 浏览器插件版的NewBingGoGo不受到网页的限制，更加强大。可以登录自己的微软账号，速度更快，更稳定。
 
@@ -71,8 +87,4 @@ NewBingGoGo-web既可以是一个网页服务，也可以是NewBingGoGo的魔法
 
 
 ## 其他
-一个好消息和一个坏消息
-### 好消息
-我获得了蓝桥杯省赛一等奖
-### 坏消息
-因为准备参加国赛，所以暂时停更一段时间，6月10日之后继续更新。
+暂时停更一段时间，6月10日之后继续更新。

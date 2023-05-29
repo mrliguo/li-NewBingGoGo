@@ -77,17 +77,31 @@ async function handleRequest(request) {
     }
 
     if (path === '/sydney/ChatHub') { //魔法聊天
-        return await websocketHandler(request)
+        let h = {
+            "Host":"sydney.bing.com",
+            "Origin":"https://www.bing.com"
+        }
+        let randomAddress = url.searchParams.get("randomAddress");
+        if(randomAddress){
+            h["X-forwarded-for"] = randomAddress;
+        }
+        return goUrl(request,"https://sydney.bing.com/sydney/ChatHub",h);
     }
     if (path === "/turing/conversation/create") { //创建聊天
-        return goUrl(request, "https://www.bing.com/turing/conversation/create");
+        return goUrl(request, "https://www.bing.com/turing/conversation/create",{
+            "referer":"https://www.bing.com/search?q=Bing+AI"
+        });
     }
 
     if(path==="/edgesvc/turing/captcha/create"){//请求验证码图片
-        return goUrl(request,"https://edgeservices.bing.com/edgesvc/turing/captcha/create");
+        return goUrl(request,"https://edgeservices.bing.com/edgesvc/turing/captcha/create",{
+            "referer":"https://edgeservices.bing.com/edgesvc/chat?udsframed=1&form=SHORUN&clientscopes=chat,noheader,channelstable,&shellsig=709707142d65bbf48ac1671757ee0fd1996e2943&setlang=zh-CN&lightschemeovr=1"
+        });
     }
     if(path==="/edgesvc/turing/captcha/verify"){//提交验证码
-        return goUrl(request,"https://edgeservices.bing.com/edgesvc/turing/captcha/verify?"+ url.search);
+        return goUrl(request,"https://edgeservices.bing.com/edgesvc/turing/captcha/verify?"+ url.search,{
+            "referer":"https://edgeservices.bing.com/edgesvc/chat?udsframed=1&form=SHORUN&clientscopes=chat,noheader,channelstable,&shellsig=709707142d65bbf48ac1671757ee0fd1996e2943&setlang=zh-CN&lightschemeovr=1"
+        });
     }
 
     if (path.startsWith('/msrewards/api/v1/enroll')) { //加入候补
@@ -95,21 +109,18 @@ async function handleRequest(request) {
     }
     if (path === '/images/create') { //AI画图
         return goUrl(request, "https://www.bing.com/images/create" + url.search, {
-            "sec-fetch-site": "same-origin",
             "referer": "https://www.bing.com/search?q=bingAI"
         });
     }
     if (path.startsWith('/images/create/async/results')) { //请求AI画图图片
         url.hostname = "www.bing.com";
         return goUrl(request, url.toString(), {
-            "sec-fetch-site": "same-origin",
             "referer": "https://www.bing.com/images/create?partner=sydney&showselective=1&sude=1&kseed=7000"
         });
     }
     if (path.startsWith('/rp')) { //显示AI画图错误提示图片
         url.hostname = "www.bing.com";
         return goUrl(request, url.toString(), {
-            "sec-fetch-site": "same-origin",
             "referer": "https://www.bing.com/search?q=bingAI"
         });
     }
@@ -182,12 +193,23 @@ async function goUrl(request, url, addHeaders) {
     }
     //保留头部信息
     let reqHeaders = request.headers;
-    let dropHeaders = ["user-agent", "accept", "accept-language"];
+    let dropHeaders = ["accept", "accept-language","accept-encoding","Connection","Upgrade"];
     for (let h of dropHeaders) {
         if (reqHeaders.has(h)) {
             fp.headers[h] = reqHeaders.get(h);
         }
     }
+
+    fp.headers["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/113.0.0.0 Safari/537.36 Edg/113.0.1774.57"
+
+    //客户端指定的随机地址
+    let randomAddress = reqHeaders.get("randomAddress");
+    if(!randomAddress){
+        randomAddress = "12.24.144.227";
+    }
+    //添加X-forwarded-for
+    fp.headers['X-forwarded-for'] = randomAddress;
+
     if (addHeaders) {
         //添加头部信息
         for (let h in addHeaders) {
@@ -216,22 +238,10 @@ async function goUrl(request, url, addHeaders) {
         fp.headers["cookie"] = reqHeaders.get('cookie');
     }
 
-    //客户端指定的随机地址
-    let randomAddress = reqHeaders.get("randomAddress");
-    if(!randomAddress){
-        randomAddress = "12.24.144.227";
-    }
-    //添加X-forwarded-for
-    fp.headers['X-forwarded-for'] = randomAddress;
-
     let res = await fetch(url, fp);
-    let headers = new Headers(res.headers);
-    headers.set("cookieID",cookieID);
-    return new Response(res.body,{
-        status:res.status,
-        statusText:res.statusText,
-        headers:headers
-    });
+    let newRes = new Response(res.body,res);
+    newRes.headers.set("cookieID",`${cookieID}`);
+    return newRes;
 }
 
 //获取用于返回的错误信息
@@ -258,61 +268,6 @@ function getRedirect(url) {
             "content-type": "text/html",
             "location": url
         }
-    })
-}
-
-
-
-
-/**
- * @param serverWebSocket {WebSocket}
- * */
-async function handleSession(serverWebSocket) {
-    let isAccept = false;
-    let bingws = new WebSocket('wss://sydney.bing.com/sydney/ChatHub');
-    serverWebSocket.addEventListener("message", event => {
-        bingws.send(event.data);
-    });
-    bingws.addEventListener("message", event => {
-        serverWebSocket.send(event.data)
-    });
-    bingws.addEventListener("open", event => {
-        isAccept = true;
-        serverWebSocket.accept();
-    })
-    bingws.addEventListener("close", event => {
-        serverWebSocket.close(event.code, event.reason);
-    })
-    bingws.addEventListener("error", event => {
-        if(!isAccept){
-            serverWebSocket.accept();
-        }
-        serverWebSocket.send(JSON.stringify({
-            type: 'error',
-            mess: "workers接到bing错误：" + event.message
-        }));
-        serverWebSocket.close();
-    });
-    serverWebSocket.addEventListener("error", event => {
-        serverWebSocket.close();
-    })
-    serverWebSocket.addEventListener("close",event => {
-        bingws.close(event.code, event.reason);
-    });
-}
-
-const websocketHandler = async request => {
-    const upgradeHeader = request.headers.get("Upgrade")
-    if (upgradeHeader !== "websocket") {
-        return new Response("Expected websocket", { status: 400 })
-    }
-
-    const [client, server] = Object.values(new WebSocketPair())
-    await handleSession(server)
-
-    return new Response(null, {
-        status: 101,
-        webSocket: client
     })
 }
 
